@@ -209,6 +209,20 @@ Dataset<Row> result = calls.filter("l.type = 'llamada'")
                            .agg(avg(unix_timestamp(calls.col("l.endTime")).$minus(unix_timestamp(calls.col("l.startTime")))).as("duracion"));
 ```
 
+Q1_2.
+
+```java
+Dataset<Row> calls = myGraph.find("(t1)-[e1]->(l); (t2)-[e2]->(l)");
+Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                           .filter("t1.type = 'telefono'")
+                           .filter("t2.type = 'telefono'")
+                           .filter("t1.id > t2.id")
+                           .filter("e1.type = 'creo'")
+                           .filter("e2.type = 'recibio'")
+                           .groupBy("t1.id", "t2.id")
+                           .agg(avg(unix_timestamp(calls.col("l.endTime")).$minus(unix_timestamp(calls.col("l.startTime")))));
+```
+
 Q1_3.
 
 ```java
