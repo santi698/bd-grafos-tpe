@@ -197,6 +197,66 @@ GROUP BY t1.id_usuario, t2.id_usuario, t3.id_usuario, l1.id_llamada;
 ```
 
 # GraphFrames
+Q1_1.
+
+```java
+Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l)");
+Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                           .filter("t1.type = 'telefono'")
+                           .filter("t2.type = 'telefono'")
+                           .filter("t1.numero > t2.numero")
+                           .groupBy("t1.numero", "t2.numero")
+                           .agg(avg(unix_timestamp(calls.col("l.endTime")).$minus(unix_timestamp(calls.col("l.startTime")))).as("duracion"));
+```
+
+Q1_3.
+
+```java
+Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l)");
+Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                           .filter("t1.type = 'telefono'")
+                           .filter("t2.type = 'telefono'")
+                           .filter("t1.numero > t2.numero")
+                           .groupBy("t1.numero", "t2.numero")
+                           .agg(max(unix_timestamp(calls.col("l.endTime")).$minus(unix_timestamp(calls.col("l.startTime")))).as("duracion"));
+```
+
+Q1_4.
+
+```java
+Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2)");
+Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                            .filter("t1.type = 'telefono'")
+                            .filter("t2.type = 'telefono'")
+                            .filter("u1.id > u2.id")
+                            .groupBy("u1.id", "u2.id")
+                            .agg(countDistinct(calls.col("l.id").as("cantidad_llamadas")));
+```
+
+Q1_5.
+
+```java
+Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2)");
+Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                            .filter("t1.type = 'telefono'")
+                            .filter("t2.type = 'telefono'")
+                            .filter("u1.id > u2.id")
+                            .groupBy(calls.col("u1.id"), calls.col("u2.id"), month(calls.col("l.startTime")).as("mes"), year(calls.col("l.startTime")).as("año"))
+                            .agg(countDistinct(calls.col("l.id")).as("cantidad_llamadas"));
+```
+
+Q1_6.
+
+```java
+Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2)");
+Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                            .filter(month(calls.col("l.startTime")).$eq$eq$eq(9))
+                            .filter("t1.type = 'telefono'")
+                            .filter("t2.type = 'telefono'")
+                            .filter("u1.id > u2.id")
+                            .groupBy(calls.col("u1.id"), calls.col("u2.id"))
+                            .agg(countDistinct(calls.col("l.id")).as("cantidad_llamadas"));
+```
 
 Q2_1.
 
