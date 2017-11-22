@@ -46,9 +46,11 @@ public class GraphFramesSetup {
             .getOrCreate();
         
         GraphFrame myGraph = loadGraph(sp);
+        long t1 = System.currentTimeMillis();
+
         Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (t3)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2); (u3)-[]->(t3)");
         Dataset<Row> result = calls.filter("l.type = 'llamada'")
-                                   .filter(dayofmonth(calls.col("l.startTime")).$eq$eq$eq(4))
+                                   .filter(month(calls.col("l.startTime")).$eq$eq$eq(9))
                                    .filter(year(calls.col("l.startTime")).$eq$eq$eq(2017))
                                    .filter("t1.type = 'telefono'")
                                    .filter("t2.type = 'telefono'")
@@ -57,8 +59,8 @@ public class GraphFramesSetup {
                                    .filter("u2.id > u3.id")
                                    .groupBy("u1.id", "u2.id", "u3.id")
                                    .agg(avg(unix_timestamp(calls.col("l.endTime")).$minus(unix_timestamp(calls.col("l.startTime")))).as("duracion"));
-
         result.show();
+        System.out.println("Took: " + (System.currentTimeMillis() - t1));
         sp.close();
     }
 }

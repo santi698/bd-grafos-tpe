@@ -175,8 +175,8 @@ GROUP BY par;
 Q2_1.
 ```sql
 SELECT t1.id_usuario, t2.id_usuario, t3.id_usuario, AVG(l1.hora_fin - l1.hora_inicio)
-FROM grupo1v3.llamada l1, grupo1v3.llamada l2, grupo1v3.llamada l3,
-     grupo1v3.telefono t1, grupo1v3.telefono t2, grupo1v3.telefono t3
+FROM grupo1v1.llamada l1, grupo1v1.llamada l2, grupo1v1.llamada l3,
+     grupo1v1.telefono t1, grupo1v1.telefono t2, grupo1v1.telefono t3
 WHERE l1.id_llamada = l2.id_llamada AND l2.id_llamada = l3.id_llamada
   AND (
         l1.id_creador = t1.id
@@ -194,4 +194,22 @@ WHERE l1.id_llamada = l2.id_llamada AND l2.id_llamada = l3.id_llamada
     AND t1.id_usuario <> t3.id_usuario
   )
 GROUP BY t1.id_usuario, t2.id_usuario, t3.id_usuario, l1.id_llamada;
+```
+
+# GraphFrames
+
+Q2_1.
+
+```java
+Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (t3)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2); (u3)-[]->(t3)");
+Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                            .filter(month(calls.col("l.startTime")).$eq$eq$eq(9))
+                            .filter(year(calls.col("l.startTime")).$eq$eq$eq(2017))
+                            .filter("t1.type = 'telefono'")
+                            .filter("t2.type = 'telefono'")
+                            .filter("t3.type = 'telefono'")
+                            .filter("u1.id > u2.id")
+                            .filter("u2.id > u3.id")
+                            .groupBy("u1.id", "u2.id", "u3.id")
+                            .agg(avg(unix_timestamp(calls.col("l.endTime")).$minus(unix_timestamp(calls.col("l.startTime")));
 ```
