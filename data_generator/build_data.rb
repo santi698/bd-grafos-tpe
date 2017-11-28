@@ -6,7 +6,7 @@ require 'ostruct'
 PAIS = 'Argentina'
 CIUDADES = ['Buenos Aires', 'CABA', 'Córdoba', 'Luján', 'Quilmes', 'Salta', 'Junín']
 PROVEEDORES = ['Movistar', 'Personal', 'Claro']
-CLIENT_COUNT = 3000
+CLIENT_COUNT = 2000
 AVG_CALLS_PER_DAY = 1
 DAYS_TO_GENERATE = 180
 
@@ -27,9 +27,12 @@ FactoryGirl.define do
   factory :llamada, class: OpenStruct do
     sequence(:id) { |n| n }
     hora_inicio { Faker::Time.between(DAYS_TO_GENERATE.days.ago, DateTime.now) }
-    hora_fin { hora_inicio + (Faker::Number.normal(20, 5)).minutes }
+    duracion { Faker::Number.normal(20, 5) }
     id_creador { telefonos.sample.id }
-    id_participante { telefonos.sample(2 + Faker::Number.normal(0, 0.5).abs.round).map(&:id) }
+    id_participante do
+      no_creator = telefonos.reject { |tel| tel.id == id_creador }
+      no_creator.sample(2 + Faker::Number.normal(0, 0.5).abs.round).map(&:id)
+    end
   end
 end
 
@@ -57,15 +60,16 @@ puts "Creando #{cantidad_llamadas} llamadas de a #{batch_size}."
 
 (1..100).each do |i|
   puts "Batch #{i}"
-  nuevas_llamadas = FactoryGirl.build_list(:llamada, 
+  nuevas_llamadas = FactoryGirl.build_list(:llamada,
     batch_size,
     telefonos: telefonos)
 
   llamadas_file = File.open('llamadas.csv', 'a') do |file|
     llamadas_csv = nuevas_llamadas.map do |llamada|
-      tuples = llamada.id_participante.map { |part| "(#{llamada.id}, '#{llamada.hora_inicio}', '#{llamada.hora_fin}', #{llamada.id_creador}, #{part})"}
+      tuples = llamada.id_participante.map { |part| "#{llamada.id}, '#{llamada.hora_inicio}', '#{llamada.duracion}', #{llamada.id_creador}, #{part}"}
       "#{tuples.join("\n")}"
     end
     file.write llamadas_csv.join("\n")
+    file.write("\n")
   end
 end
