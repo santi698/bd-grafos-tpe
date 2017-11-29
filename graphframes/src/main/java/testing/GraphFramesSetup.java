@@ -158,8 +158,8 @@ public class GraphFramesSetup {
         long start = System.currentTimeMillis();
         Dataset<Row> result = runQuery(myGraph, QUERY_NUMBER);
         long elapsed = System.currentTimeMillis() - start;
-        System.out.println("The query took " + elapsed + " ms.");
         result.show();
+        System.out.println("\n\n\n\n\nThe query took " + elapsed + " ms.\n\n\n\n\n");
         sp.close();
     }
 }
