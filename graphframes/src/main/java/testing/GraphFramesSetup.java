@@ -18,24 +18,24 @@ public class GraphFramesSetup {
         // Load data first time
         JavaSparkContext context = new JavaSparkContext(session.sparkContext());
         
-        List<Row> telefonos = readCSV("/user/socamica/telefonos.csv", session);
-        SubGraph telefonosGraph = GraphBuilder.buildTelefonos(telefonos);
-        List<Row> llamadas = readCSV("/user/socamica/llamadas.csv", session);
-        SubGraph llamadasGraph = GraphBuilder.buildLlamadas(llamadas);
+        List<Row> telefonos = readCSV("/user/socamica/telefonos_800K.csv", session);
+        SubGraph telefonosGraph = GraphBuilder.buildTelefonos(telefonos, context);
+        List<Row> llamadas = readCSV("/user/socamica/llamadas_800K.csv", session);
+        SubGraph llamadasGraph = GraphBuilder.buildLlamadas(llamadas, context);
 
-        Dataset<Row> verticesDF = telefonosGraph.getVertices(context).union(llamadasGraph.getVertices(context));
-        Dataset<Row> edgesDF = telefonosGraph.getEdges(context).union(llamadasGraph.getEdges(context));
+        Dataset<Row> verticesDF = telefonosGraph.getVertices().union(llamadasGraph.getVertices());
+        Dataset<Row> edgesDF = telefonosGraph.getEdges().union(llamadasGraph.getEdges());
 
         // Persist data
-        edgesDF.write().save("/user/socamica/grupo1v1-edges");
-        verticesDF.write().save("/user/socamica/grupo1v1-vertices");
+        edgesDF.write().save("/user/socamica/grupo1v2-edges");
+        verticesDF.write().save("/user/socamica/grupo1v2-vertices");
         return GraphFrame.apply(verticesDF, edgesDF);
     }
 
     public static GraphFrame loadGraph(SparkSession session) {
         // Recover persisted data
-        Dataset<Row> edgesDF = session.read().load("/user/socamica/grupo1v1-edges");
-        Dataset<Row> verticesDF = session.read().load("/user/socamica/grupo1v1-vertices");
+        Dataset<Row> edgesDF = session.read().load("/user/socamica/grupo1v2-edges");
+        Dataset<Row> verticesDF = session.read().load("/user/socamica/grupo1v2-vertices");
         return GraphFrame.apply(verticesDF, edgesDF);
     }
 
@@ -57,7 +57,7 @@ public class GraphFramesSetup {
             .appName("TPE Grupo 1")
             .getOrCreate();
         
-        GraphFrame myGraph = loadGraph(sp);
+        GraphFrame myGraph = buildGraph(sp);
         benchmark(() -> {
             Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2)");
             Dataset<Row> result = calls.filter("l.type = 'llamada'")
@@ -68,6 +68,7 @@ public class GraphFramesSetup {
                                        .groupBy(calls.col("u1.id"), calls.col("u2.id"))
                                        .agg(countDistinct(calls.col("l.id")).as("cantidad_llamadas"));
             result.show();
+            result.cache();
         });
         sp.close();
     }

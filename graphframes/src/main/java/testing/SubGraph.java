@@ -2,6 +2,7 @@ package testing;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
@@ -11,35 +12,33 @@ import org.apache.spark.sql.types.StructType;
 
 public class SubGraph implements Serializable {
     public static final long serialVersionUID = 0l;
-    private ArrayList<Row> vertices;
-    private ArrayList<Row> edges;
+    private Dataset<Row> vertices;
+    private Dataset<Row> edges;
     private StructType vertexSchema;
     private StructType edgeSchema;
+    private SQLContext sqlContext;
 
-    public SubGraph(StructType vertexSchema, StructType edgeSchema) {
+    public SubGraph(StructType vertexSchema, StructType edgeSchema, JavaSparkContext context) {
+        this.sqlContext = new SQLContext(context);
         this.vertexSchema = vertexSchema;
         this.edgeSchema = edgeSchema;
-        this.vertices = new ArrayList<Row>();
-        this.edges = new ArrayList<Row>();
+        this.vertices = sqlContext.createDataFrame(new ArrayList<Row>(), vertexSchema);
+        this.edges = sqlContext.createDataFrame(new ArrayList<Row>(), edgeSchema);
     }
 
-    public void addVertex(Row vertex) {
-        this.vertices.add(vertex);
+    public void addVertex(List<Row> vertices) {
+        this.vertices = this.vertices.union(sqlContext.createDataFrame(vertices, vertexSchema));
     }
 
-    public void addEdge(Row edge) {
-        this.edges.add(edge);
+    public void addEdge(List<Row> edges) {
+        this.edges = this.edges.union(sqlContext.createDataFrame(edges, edgeSchema));
     }
 
-    public Dataset<Row> getVertices(JavaSparkContext context) {
-        SQLContext sqlContext = new org.apache.spark.sql.SQLContext(context);
-        Dataset<Row> df = sqlContext.createDataFrame(context.parallelize(this.vertices), this.vertexSchema);
-        return df;
+    public Dataset<Row> getVertices() {
+        return this.vertices;
     }
 
-    public Dataset<Row> getEdges(JavaSparkContext context) {
-        SQLContext sqlContext = new org.apache.spark.sql.SQLContext(context);
-        Dataset<Row> df = sqlContext.createDataFrame(context.parallelize(this.edges), this.edgeSchema);
-        return df;
+    public Dataset<Row> getEdges() {
+        return this.edges;
     }
 }

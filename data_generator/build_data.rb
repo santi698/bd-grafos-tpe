@@ -51,8 +51,7 @@ telefonos_file = File.open('telefonos.csv', 'w') do |file|
   file.write telefonos_sql.join("\n")
 end
 
-cantidad_llamadas = (telefonos.count * DAYS_TO_GENERATE *
-  Faker::Number.normal(AVG_CALLS_PER_DAY, 0.25)).round.abs
+cantidad_llamadas = (telefonos.count * DAYS_TO_GENERATE * Faker::Number.normal(AVG_CALLS_PER_DAY, 0.25)).round.abs
 
 batch_size = cantidad_llamadas / 100
 llamadas = []
@@ -60,13 +59,11 @@ puts "Creando #{cantidad_llamadas} llamadas de a #{batch_size}."
 
 (1..100).each do |i|
   puts "Batch #{i}"
-  nuevas_llamadas = FactoryGirl.build_list(:llamada,
-    batch_size,
-    telefonos: telefonos)
-
+  nuevas_llamadas = FactoryGirl.build_list(:llamada, batch_size, telefonos: telefonos)
   llamadas_file = File.open('llamadas.csv', 'a') do |file|
     llamadas_csv = nuevas_llamadas.map do |llamada|
-      tuples = llamada.id_participante.map { |part| "#{llamada.id}, '#{llamada.hora_inicio}', '#{llamada.duracion}', #{llamada.id_creador}, #{part}"}
+      tuples = llamada.id_participante.map { |part| "#{llamada.id}, '#{llamada.hora_inicio}', "\
+                                                    "'#{llamada.duracion}', #{llamada.id_creador}, #{part}"}
       "#{tuples.join("\n")}"
     end
     file.write llamadas_csv.join("\n")
