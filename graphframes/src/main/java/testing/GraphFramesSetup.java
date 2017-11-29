@@ -33,7 +33,7 @@ public class GraphFramesSetup {
         Dataset<Row> verticesDF = telefonosGraph.getVertices(context);
         Dataset<Row> edgesDF = telefonosGraph.getEdges(context);
         chunkCalls = readCSV("/user/socamica/llamadas800K.csv", session, offset, limit);
-        while(chunkPhones.size() > 0) {
+        while(chunkCalls.size() > 0) {
             SubGraph llamadasGraph = GraphBuilder.buildLlamadas(chunkCalls);
             verticesDF = verticesDF.union(llamadasGraph.getVertices(context));
             edgesDF = edgesDF.union(llamadasGraph.getEdges(context));
@@ -71,18 +71,18 @@ public class GraphFramesSetup {
             .appName("TPE Grupo 1")
             .getOrCreate();
         
-        GraphFrame myGraph = buildGraph(sp);
-        //benchmark(() -> {
-        //    Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2)");
-        //    Dataset<Row> result = calls.filter("l.type = 'llamada'")
-        //                               .filter(month(calls.col("l.startTime")).$eq$eq$eq(9))
-        //                               .filter("t1.type = 'telefono'")
-        //                               .filter("t2.type = 'telefono'")
-        //                               .filter("u1.id > u2.id")
-        //                               .groupBy(calls.col("u1.id"), calls.col("u2.id"))
-        //                               .agg(countDistinct(calls.col("l.id")).as("cantidad_llamadas"));
-        //    result.show();
-        //});
+        GraphFrame myGraph = loadGraph(sp);
+        benchmark(() -> {
+            Dataset<Row> calls = myGraph.find("(t1)-[]->(l); (t2)-[]->(l); (u1)-[]->(t1); (u2)-[]->(t2)");
+            Dataset<Row> result = calls.filter("l.type = 'llamada'")
+                                       .filter(month(calls.col("l.startTime")).$eq$eq$eq(9))
+                                       .filter("t1.type = 'telefono'")
+                                       .filter("t2.type = 'telefono'")
+                                       .filter("u1.id > u2.id")
+                                       .groupBy(calls.col("u1.id"), calls.col("u2.id"))
+                                       .agg(countDistinct(calls.col("l.id")).as("cantidad_llamadas"));
+            result.show();
+        });
         sp.close();
     }
 }
