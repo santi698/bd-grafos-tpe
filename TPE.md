@@ -33,11 +33,11 @@ SELECT CASE WHEN id_creador < id_participante
             ELSE (participante.numero, creador.numero)
             END AS par,
        AVG(duracion)
-FROM grupo1v3.llamada,
-     grupo1v3.telefono creador,
-     grupo1v3.telefono participante
-WHERE creador.id = grupo1v3.llamada.id_creador
-  AND participante.id = grupo1v3.llamada.id_participante
+FROM grupo1v2.llamada,
+     grupo1v2.telefono creador,
+     grupo1v2.telefono participante
+WHERE creador.id = grupo1v2.llamada.id_creador
+  AND participante.id = grupo1v2.llamada.id_participante
 GROUP BY par;
 ```
 
@@ -46,9 +46,9 @@ Q1_2.
 ```sql
 SELECT creador.numero, participante.numero,
        AVG(duracion)
-FROM llamada,
-     telefono creador,
-     telefono participante
+FROM grupo1v2.llamada,
+     grupo1v2.telefono creador,
+     grupo1v2.telefono participante
 WHERE creador.id = llamada.id_creador
   AND participante.id = llamada.id_participante
 GROUP BY creador.id, participante.id;
@@ -62,9 +62,9 @@ SELECT CASE WHEN creador.id_usuario > participante.id_usuario
             ELSE (participante.id_usuario, creador.id_usuario)
             END AS par,
        MAX(duracion)
-FROM llamada,
-     telefono creador,
-     telefono participante
+FROM grupo1v2.llamada,
+     grupo1v2.telefono creador,
+     grupo1v2.telefono participante
 WHERE creador.id = llamada.id_creador
   AND participante.id = llamada.id_participante
 GROUP BY par;
@@ -78,9 +78,9 @@ SELECT CASE WHEN creador.id_usuario > participante.id_usuario
             ELSE (participante.id_usuario, creador.id_usuario)
             END AS par,
        COUNT(*)
-FROM llamada,
-     telefono creador,
-     telefono participante
+FROM grupo1v2.llamada,
+     grupo1v2.telefono creador,
+     grupo1v2.telefono participante
 WHERE creador.id = llamada.id_creador
   AND participante.id = llamada.id_participante
 GROUP BY par;
@@ -95,9 +95,9 @@ SELECT CASE WHEN creador.id_usuario > participante.id_usuario
             END AS par,
        COUNT(*),
        EXTRACT (month FROM hora_inicio) AS mes
-FROM llamada,
-     telefono creador,
-     telefono participante
+FROM grupo1v2.llamada,
+     grupo1v2.telefono creador,
+     grupo1v2.telefono participante
 WHERE creador.id = llamada.id_creador
   AND participante.id = llamada.id_participante
 GROUP BY par, mes;
@@ -111,9 +111,9 @@ SELECT CASE WHEN creador.id_usuario > participante.id_usuario
             ELSE (participante.id_usuario, creador.id_usuario)
             END AS par,
        COUNT(*)
-FROM llamada,
-     telefono creador,
-     telefono participante
+FROM grupo1v2.llamada,
+     grupo1v2.telefono creador,
+     grupo1v2.telefono participante
 WHERE creador.id = llamada.id_creador
   AND participante.id = llamada.id_participante
   AND EXTRACT (month FROM hora_inicio) = 4
@@ -125,8 +125,8 @@ Q2_1.
 
 ```sql
 SELECT t1.id_usuario, t2.id_usuario, t3.id_usuario, AVG(l1.duracion)
-FROM grupo1v1.llamada l1, grupo1v1.llamada l2, grupo1v1.llamada l3,
-     grupo1v1.telefono t1, grupo1v1.telefono t2, grupo1v1.telefono t3
+FROM grupo1v2.llamada l1, grupo1v2.llamada l2, grupo1v2.llamada l3,
+     grupo1v2.telefono t1, grupo1v2.telefono t2, grupo1v2.telefono t3
 WHERE l1.id_llamada = l2.id_llamada AND l2.id_llamada = l3.id_llamada
   AND (
         l1.id_creador = t1.id

@@ -114,7 +114,7 @@ public class GraphBuilder {
     }
 
     private static Float parseFloat(Object string) {
-        return Float.valueOf((String) string);
+        return Float.valueOf(((String) string).replaceAll("\"", ""));
     }
 
     public static SubGraph buildTelefonos(List<Row> telefonos) {
