@@ -6,9 +6,9 @@ require 'ostruct'
 PAIS = 'Argentina'
 CIUDADES = ['Buenos Aires', 'CABA', 'Córdoba', 'Luján', 'Quilmes', 'Salta', 'Junín']
 PROVEEDORES = ['Movistar', 'Personal', 'Claro']
-CLIENT_COUNT = 2000
+CLIENT_COUNT = 2500
 AVG_CALLS_PER_DAY = 1
-DAYS_TO_GENERATE = 180
+DAYS_TO_GENERATE = 210
 
 FactoryGirl.define do
   factory :cliente, class: OpenStruct do

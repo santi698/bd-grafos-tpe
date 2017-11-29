@@ -89,17 +89,17 @@ public class GraphBuilder {
         vertexFields.add(DataTypes.createStructField("id", DataTypes.LongType, false));
         vertexFields.add(DataTypes.createStructField("typeId", DataTypes.LongType, true));
         vertexFields.add(DataTypes.createStructField("startTime", DataTypes.TimestampType, true));
-        vertexFields.add(DataTypes.createStructField("endTime", DataTypes.TimestampType, true));
-        vertexFields.add(DataTypes.createStructField("numero",DataTypes.StringType, true));
-        vertexFields.add(DataTypes.createStructField("name",DataTypes.StringType, true));
-        vertexFields.add(DataTypes.createStructField("type",DataTypes.StringType, false));
+        vertexFields.add(DataTypes.createStructField("duration", DataTypes.FloatType, true));
+        vertexFields.add(DataTypes.createStructField("numero", DataTypes.StringType, true));
+        vertexFields.add(DataTypes.createStructField("name", DataTypes.StringType, true));
+        vertexFields.add(DataTypes.createStructField("type", DataTypes.StringType, false));
         return DataTypes.createStructType(vertexFields);
     }
 
     private static StructType buildEdgeSchema() {
         List<StructField> edgeFields = new ArrayList<StructField>();
-        edgeFields.add(DataTypes.createStructField("src",DataTypes.LongType, true));
-        edgeFields.add(DataTypes.createStructField("dst",DataTypes.LongType, true));
+        edgeFields.add(DataTypes.createStructField("src", DataTypes.LongType, true));
+        edgeFields.add(DataTypes.createStructField("dst", DataTypes.LongType, true));
         edgeFields.add(DataTypes.createStructField("type", DataTypes.StringType, false));
         return DataTypes.createStructType(edgeFields);
     }
@@ -111,6 +111,10 @@ public class GraphBuilder {
     private static Timestamp parseTimestamp(Object string) {
         String str = (String) string;
         return Timestamp.valueOf(str.trim().substring(1, 20));
+    }
+
+    private static Float parseFloat(Object string) {
+        return Float.valueOf((String) string);
     }
 
     public static SubGraph buildTelefonos(List<Row> telefonos) {
@@ -142,7 +146,7 @@ public class GraphBuilder {
     public static SubGraph buildLlamadas(List<Row> llamadas) {
         SubGraph subGraph = new SubGraph(buildVertexSchema(), buildEdgeSchema());
         llamadas.forEach((row) -> {
-            Row call = RowFactory.create(GlobalId.getInstance().getNext(), parseLong(row.get(0)), parseTimestamp(row.get(1)), parseTimestamp(row.get(2)), null, null, "llamada");
+            Row call = RowFactory.create(GlobalId.getInstance().getNext(), parseLong(row.get(0)), parseTimestamp(row.get(1)), parseFloat(row.get(2)), null, null, "llamada");
             subGraph.addVertex(call);
             if (!LoadedCallerIds.getInstance().has(parseLong(row.get(3)))) {
                 Row userStartedCall = RowFactory.create(parseLong(row.get(3)), parseLong(row.get(0)), "creo");

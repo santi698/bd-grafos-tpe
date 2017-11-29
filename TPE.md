@@ -236,5 +236,5 @@ Dataset<Row> result = calls.filter("l.type = 'llamada'")
                             .filter("u1.id > u2.id")
                             .filter("u2.id > u3.id")
                             .groupBy("u1.id", "u2.id", "u3.id")
-                            .agg(avg(unix_timestamp(calls.col("l.endTime")).$minus(unix_timestamp(calls.col("l.startTime")));
+                            .agg(avg(calls.col("l.duration")));
 ```
