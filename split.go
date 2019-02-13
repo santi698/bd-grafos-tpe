@@ -42,8 +42,8 @@ func main() {
 
 	// Write headers
 	verticesWriter.WriteAll([][]string{
-		{"idLlamada", "timestamp", "duracion"},
-		{"numeric", "date", "numeric"},
+		{"type", "llamadaId", "timestamp", "duracion"},
+		{"label", "numeric", "date", "numeric"},
 	})
 
 	reader := csv.NewReader(bufio.NewReader(inputFile))
@@ -63,14 +63,14 @@ func main() {
 			ReceiverID: strings.Trim(line[4], " "),
 		}
 		if !processedCallIds[call.ID] {
-			verticesWriter.Write([]string{call.ID, call.DateTime, call.Duration})
-			edgesWriter.Write([]string{"telefono_id", "numeric", call.CallerID})
-			edgesWriter.Write([]string{"llamada_id", "numeric", call.ID})
+			verticesWriter.Write([]string{"llamada", call.ID, call.DateTime, call.Duration})
+			edgesWriter.Write([]string{"telefonoId", "numeric", call.CallerID})
+			edgesWriter.Write([]string{"llamadaId", "numeric", call.ID})
 			edgesWriter.Write([]string{"out", "creo"})
 		}
 
-		edgesWriter.Write([]string{"telefono_id", "numeric", call.ReceiverID})
-		edgesWriter.Write([]string{"llamada_id", "numeric", call.ID})
+		edgesWriter.Write([]string{"telefonoId", "numeric", call.ReceiverID})
+		edgesWriter.Write([]string{"llamadaId", "numeric", call.ID})
 		edgesWriter.Write([]string{"out", "participoEn"})
 		processedCallIds[call.ID] = true
 	}
