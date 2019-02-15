@@ -16,7 +16,7 @@ public class GraphFramesSetup {
     private static String VERTICES_PARQUET_LOCATION = "/user/socamica/grupo1v2-vertices";
     private static String EDGES_PARQUET_LOCATION = "/user/socamica/grupo1v2-edges";
     private static boolean BUILD_GRAPH = false;
-    private static String QUERY_NUMBER = "1_1";
+    private static String QUERY_NUMBER = "final_1";
     private static List<Row> readCSV(String location, SparkSession session, int offset, int limit) throws Exception {
         Dataset<Row> csv = session.read().csv(location);
         return csv.filter(new FilterFunction<Row>(){
@@ -71,8 +71,12 @@ public class GraphFramesSetup {
         System.out.println("[TOTAL] Average: " + time / 5.0);
     }
 
-    public static Dataset<Row> runQuery(GraphFrame graph, String number) {
+    public static Dataset<Row> runQuery(GraphFrame graph, String number, SparkSession sp) {
         Dataset<Row> calls;
+        StringBuilder result;
+        Dataset<Row> vertices;
+        Dataset<Row> edges;
+        Dataset<Row> pairs;
         switch(number) {
             case "1_1":
                 calls = graph.find("(t1)-[]->(l); (t2)-[]->(l)");
@@ -139,6 +143,62 @@ public class GraphFramesSetup {
                             .filter("u2.id > u3.id")
                             .groupBy("u1.id", "u2.id", "u3.id")
                             .agg(avg(calls.col("l.duration")));
+            case "final_1":
+                result = new StringBuilder();
+                vertices = graph.vertices();
+                edges = graph.edges();
+                vertices.createOrReplaceTempView("vertices");
+                pairs = sp.sql("SELECT u1.id, u2.id FROM vertices AS u1, vertices AS u2 " +
+                               "WHERE u1.id > u2.id");
+                result.append("id_1\tid_2\tmin_distance");
+                pairs.foreach((pair) -> {
+                    System.out.println("\n\n\n\n\n\n\n\n" + vertices.schema());
+                    Dataset<Row> shortestPath = graph.bfs()
+                        .fromExpr(vertices.col("typeId").$eq$eq$eq(pair.get(0)))
+                        .toExpr(vertices.col("typeId").$eq$eq$eq(pair.get(1)))
+                        .maxPathLength(10) // Arbitrario
+                        .run();
+                    result.append(pair.get(0) + "\t" + pair.get(1) + "\t" + (shortestPath.columns().length / 2));
+                });
+                System.out.println(result);
+                return null;
+            case "final_2a":
+                result = new StringBuilder();
+                vertices = graph.vertices();
+                edges = graph.edges();
+                vertices.createOrReplaceTempView("vertices");
+                pairs = sp.sql("SELECT u1.id, u2.id FROM vertices AS u1, vertices AS u2 " +
+                                            "WHERE u1.type = 'usuario' AND u2.type = 'usuario' AND u1.id > u2.id");
+                result.append("id_1\tid_2\tmin_distance");
+                pairs.foreach((pair) -> {
+                    Dataset<Row> shortestPath = graph.bfs()
+                        .fromExpr(vertices.col("type").$eq$eq$eq("usuario").and(vertices.col("typeId").$eq$eq$eq(pair.get(0))))
+                        .toExpr(vertices.col("type").$eq$eq$eq("usuario").and(vertices.col("typeId").$eq$eq$eq(pair.get(1))))
+                        .edgeFilter(edges.col("type").isin("tiene_telefono", "recibio", "creo", "creada_por", "recibida_por", "pertenece_a"))
+                        .maxPathLength(10)
+                        .run();
+                    result.append(pair.get(0) + "\t" + pair.get(1) + "\t" + (shortestPath.columns().length / 2));
+                });
+                System.out.println(result);
+                return null;
+            case "final_2d":
+                result = new StringBuilder();
+                vertices = graph.vertices();
+                edges = graph.edges();
+                int fromUserId = 1;
+                int maxPathLength = 10;
+                Dataset<Row> shortestPath = graph.bfs()
+                .fromExpr(vertices.col("type").$eq$eq$eq("usuario").and(vertices.col("typeId").$eq$eq$eq(fromUserId)))
+                .toExpr(vertices.col("type").$eq$eq$eq("usuario"))
+                    .edgeFilter(edges.col("type").isin("tiene_telefono", "recibio", "creo", "creada_por", "recibida_por", "pertenece_a"))
+                    .maxPathLength(maxPathLength)
+                    .run();
+                if (shortestPath.count() == 0) {
+                    System.out.println("No existe camino desde " + fromUserId + " hacia ningún usuario");
+                };
+                int columnCount = shortestPath.columns().length;
+                result.append(fromUserId + "\t" + shortestPath.first().get(columnCount - 1) + "\t" + (columnCount / 2));
+                System.out.println(result);
             default: return null;
         }
     }
@@ -148,17 +208,19 @@ public class GraphFramesSetup {
             .builder()
             .appName("TPE Grupo 1")
             .getOrCreate();
-        
-            GraphFrame myGraph;
+
+        GraphFrame myGraph;
         if (BUILD_GRAPH) {
             myGraph = buildGraph(sp);
         } else {
             myGraph = loadGraph(sp);
         }
         long start = System.currentTimeMillis();
-        Dataset<Row> result = runQuery(myGraph, QUERY_NUMBER);
+        Dataset<Row> result = runQuery(myGraph, QUERY_NUMBER, sp);
         long elapsed = System.currentTimeMillis() - start;
-        result.show();
+        if (result != null) {
+            result.show();
+        }
         System.out.println("\n\n\n\n\nThe query took " + elapsed + " ms.\n\n\n\n\n");
         sp.close();
     }

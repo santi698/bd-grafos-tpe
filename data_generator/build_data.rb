@@ -4,11 +4,11 @@ require 'as-duration'
 require 'ostruct'
 
 PAIS = 'Argentina'
-CIUDADES = ['Buenos Aires', 'CABA', 'Córdoba', 'Luján', 'Quilmes', 'Salta', 'Junín']
+CIUDADES = ['Buenos Aires', 'CABA', 'Córdoba']
 PROVEEDORES = ['Movistar', 'Personal', 'Claro']
-CLIENT_COUNT = 2500
+CLIENT_COUNT = 10
 AVG_CALLS_PER_DAY = 1
-DAYS_TO_GENERATE = 210
+DAYS_TO_GENERATE = 10
 
 FactoryGirl.define do
   factory :cliente, class: OpenStruct do
@@ -66,7 +66,7 @@ puts "Creando #{cantidad_llamadas} llamadas de a #{batch_size}."
 
   llamadas_file = File.open('llamadas.csv', 'a') do |file|
     llamadas_csv = nuevas_llamadas.map do |llamada|
-      tuples = llamada.id_participante.map { |part| "#{llamada.id}, '#{llamada.hora_inicio}', '#{llamada.duracion}', #{llamada.id_creador}, #{part}"}
+      tuples = llamada.id_participante.map { |part| "#{llamada.id},#{llamada.hora_inicio},#{llamada.duracion},#{llamada.id_creador},#{part}"}
       "#{tuples.join("\n")}"
     end
     file.write llamadas_csv.join("\n")
