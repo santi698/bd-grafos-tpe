@@ -1,27 +1,27 @@
-def allPaths(traversal, fromId, toId) {
+def shortestPathNaive(traversal, fromPhone, toPhone) {
+  traversal.V().has('telefono_id', fromPhone).repeat(both().simplePath()).until(has('telefono_id', toPhone)).path().limit(1)
+}
+
+def shortestPath(traversal, fromPhone, toPhone) {
   traversal.
     V().
-    has('telefono', 'telefono_id', fromId).
+    has('telefono', 'telefono_id', fromPhone).
     as('source').
     outE('creo').
     inV().
     inE('participo_en').
     outV().
     until(
-      has('telefono', 'telefono_id', toId)
+      has('telefono', 'telefono_id', toPhone)
     ).repeat(
-        outE('creo', 'participo_en').
-        inV().
-        inE('creo', 'participo_en').
-        outV().
-        simplePath().
-        where(neq('source')
-      )
+      outE('creo', 'participo_en').
+      inV().
+      inE('creo', 'participo_en').
+      outV().
+      simplePath().
+      where(neq('source'))
     ).
     path().
-    by(coalesce(properties(), label()));
-}
-
-def shortestPath(traversal, fromId, toId) {
-  allPaths(traversal, fromId, toId).limit(1);
+    by(coalesce(properties(), label())).
+    limit(1);
 }
