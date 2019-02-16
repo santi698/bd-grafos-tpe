@@ -1,4 +1,5 @@
-graph = JanusGraphFactory.open("/home/socamica/socamica.properties");
+graph = JanusGraphFactory.open('conf/janusgraph-cassandra-es.properties');
+graph.tx().rollback();
 
 mgmt = graph.openManagement();
 
