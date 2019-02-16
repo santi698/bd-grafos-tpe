@@ -26,15 +26,57 @@ def final1(traversal, from, to) {
 }
 
 def final2a(traversal, fromUserId, toUserId) {
-  final1(traversal, 'cliente', fromUserId, toUserId)
+  final1(traversal, fromUserId, toUserId)
 }
 
-def final2b(traversal, fromUserId, toUserId) {
-  // solo tiene sentido entre todo par de clientes
+def final2b(traversal, fromUserId, distance) {
+  traversal.
+    V().
+    has('client_id', fromUserId).
+    repeat(
+      outE('tiene_telefono').
+      inV().
+      as('telefono_de').
+      outE('creo', 'participo_en').
+      inV().
+      inE('creo', 'participo_en').
+      outV().
+      as('telefono_a').
+      inE('tiene_telefono').
+      outV().
+      where('telefono_de', neq('telefono_a')).
+      by('company').
+      simplePath()
+    ).
+    times(distance).
+    path().
+    by(coalesce(properties(), label())).
+    limit(1);
 }
 
-def final2c(traversal, fromUserId, toUserId) {
-  // solo tiene sentido entre todo par de clientes
+def final2c(traversal, fromUserId, distance) {
+  traversal.
+    V().
+    has('client_id', fromUserId).
+    repeat(
+      outE('tiene_telefono').
+      inV().
+      as('telefono_de').
+      outE('creo', 'participo_en').
+      inV().
+      inE('creo', 'participo_en').
+      outV().
+      as('telefono_a').
+      inE('tiene_telefono').
+      outV().
+      where('telefono_de', neq('telefono_a')).
+      by('city').
+      simplePath()
+    ).
+    times(distance).
+    path().
+    by(coalesce(properties(), label())).
+    limit(1);
 }
 
 def final2d(traversal, from, distance) {
